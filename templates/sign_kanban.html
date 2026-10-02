@@ -29,29 +29,27 @@
                         <col style="width:320px">
                         <col style="width:115px">
                         <col style="width:100px">
-                        <col style="width:100px">
                         <col style="width:200px">
                         <col style="width:70px">
                     </colgroup>
-                    <tr><th>计划日期</th><th>项目编号</th><th>项目名称</th><th>计划金额</th><th>负责人</th><th>完成情况</th><th>签约跟踪</th><th>操作</th></tr>
+                    <tr><th>计划日期</th><th>项目编号</th><th>项目名称</th><th>计划金额</th><th>完成情况</th><th>签约跟踪</th><th>操作</th></tr>
                     {% for r in sign_month %}
                     <tr class="{{ 'status-plan' if r[4] == '计划' else 'status-done' }}">
                         <td>{{ r[6] or '-' }}</td>
                         <td>{{ r[1] or '-' }}</td>
                         <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r[2] or '(无名称)' }}</td>
                         <td>{{ '%.2f'|format(r[3]) if r[3] else '-' }}</td>
-                        <td>{{ r[5] or '-' }}</td>
                         <td>{{ r[4] or '-' }}</td>
                         <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r[7] or '-' }}</td>
                         <td><a href="{{ url_for('edit', id=r[0], next=request.url) }}">更新</a></td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="8" class="empty-cell">暂无数据</td></tr>
+                    <tr><td colspan="7" class="empty-cell">暂无数据</td></tr>
                     {% endfor %}
                     <tr class="total-row">
                         <td></td><td></td><td>合计</td>
                         <td>{{ '%.2f'|format(sign_month_totals[0]) if sign_month_totals[0] else '-' }}</td>
-                        <td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
                     </tr>
                 </table>
             </div>
@@ -64,29 +62,27 @@
                         <col style="width:320px">
                         <col style="width:115px">
                         <col style="width:100px">
-                        <col style="width:100px">
                         <col style="width:200px">
                         <col style="width:70px">
                     </colgroup>
-                    <tr><th>计划日期</th><th>项目编号</th><th>项目名称</th><th>计划金额</th><th>负责人</th><th>完成情况</th><th>签约跟踪</th><th>操作</th></tr>
+                    <tr><th>计划日期</th><th>项目编号</th><th>项目名称</th><th>计划金额</th><th>完成情况</th><th>签约跟踪</th><th>操作</th></tr>
                     {% for r in sign_quarter %}
                     <tr class="{{ 'status-plan' if r[4] == '计划' else 'status-done' }}">
                         <td>{{ r[6] or '-' }}</td>
                         <td>{{ r[1] or '-' }}</td>
                         <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r[2] or '(无名称)' }}</td>
                         <td>{{ '%.2f'|format(r[3]) if r[3] else '-' }}</td>
-                        <td>{{ r[5] or '-' }}</td>
                         <td>{{ r[4] or '-' }}</td>
                         <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r[7] or '-' }}</td>
                         <td><a href="{{ url_for('edit', id=r[0], next=request.url) }}">更新</a></td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="8" class="empty-cell">暂无数据</td></tr>
+                    <tr><td colspan="7" class="empty-cell">暂无数据</td></tr>
                     {% endfor %}
                     <tr class="total-row">
                         <td></td><td></td><td>合计</td>
                         <td>{{ '%.2f'|format(sign_quarter_totals[0]) if sign_quarter_totals[0] else '-' }}</td>
-                        <td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
                     </tr>
                 </table>
             </div>

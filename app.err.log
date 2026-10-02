@@ -1,0 +1,21 @@
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:35821
+ * Running on http://192.168.3.240:35821
+Press CTRL+C to quit
+ * Restarting with watchdog (windowsapi)
+ * Debugger is active!
+ * Debugger PIN: 254-463-503
+127.0.0.1 - - [02/Oct/2026 19:24:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 19:24:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 19:24:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 19:24:53] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 19:24:53] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [02/Oct/2026 20:01:17] "GET /sign_kanban HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 20:01:17] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [02/Oct/2026 20:41:01] "GET /sign_kanban HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 20:41:08] "GET /sign_kanban HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 20:41:14] "GET /sign_kanban HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 20:41:15] "GET /sign_kanban HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 20:41:21] "GET /sign_kanban HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 20:41:27] "GET /sign_kanban HTTP/1.1" 200 -
