@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目管理</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="tab-bar">
+        <a href="/" class="tab {% if tab=='kanban' %}active{% endif %}">当前季度KPI</a>
+        <a href="/sign_kanban" class="tab {% if tab=='sign_kanban' %}active{% endif %}">签约看板</a>
+        <a href="/accept_kanban" class="tab {% if tab=='accept_kanban' %}active{% endif %}">验收看板</a>
+        <a href="/fp_kanban" class="tab {% if tab=='fp_kanban' %}active{% endif %}">首款看板</a>
+        <a href="/lp_kanban" class="tab {% if tab=='lp_kanban' %}active{% endif %}">尾款看板</a>
+        <a href="/list?tab=list" class="tab {% if tab=='list' %}active{% endif %}">项目信息维护</a>
+        <a href="/system" class="tab {% if tab=='system' %}active{% endif %}">系统参数维护</a>
+    </div>
+
+    <form method="get" class="search-form">
+        <div class="search-row">
+            <span class="row-label">模糊查询</span>
+            <input type="text" name="search" placeholder="项目编号/名称搜索" value="{{ search }}">
+            <button type="submit" class="btn btn-secondary">搜索</button>
+            <a href="{{ url_for('list') }}" class="btn btn-ghost">重置</a>
+            <a href="{{ url_for('new', next=request.url) }}" class="btn btn-primary" style="margin-left:10px">+ 新增项目</a>
+        </div>
+
+        <div class="filter-row">
+            <span class="row-label">快捷查询</span>
+            <a href="/list" class="btn btn-secondary {% if not q %}active{% endif %}">全部项目</a>
+            <a href="/list?q=sign" class="btn btn-secondary {% if q=='sign' %}active{% endif %}">本季签约</a>
+            <a href="/list?q=accept" class="btn btn-secondary {% if q=='accept' %}active{% endif %}">本季验收</a>
+            <a href="/list?q=pay1" class="btn btn-secondary {% if q=='pay1' %}active{% endif %}">本季首付</a>
+            <a href="/list?q=pay2" class="btn btn-secondary {% if q=='pay2' %}active{% endif %}">本季尾款</a>
+        </div>
+    </form>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="flash">{{ messages[0] }}</div>
+    {% endif %}
+    {% endwith %}
+
+    {# ============================================================ #}
+    {#  外层：column布局（table-wrap → table-inner → 滑块）           #}
+    {# ============================================================ #}
+    <div class="table-wrap" id="tableWrap">
+
+        {# 两表容器：row水平排列，flex:1填满剩余高度（不含滑块） #}
+        <div class="table-inner">
+
+            {# ==================== 左侧固定列 ==================== #}
+            <div class="table-fixed" id="leftTableWrap">
+                {# 左表表头（固定不滚动） #}
+                <div class="left-thead">
+                <table id="leftTableHead">
+                    <colgroup>
+                        <col style="width:60px">
+                        <col style="width:60px">
+                        <col style="width:60px">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th class="grp-A">操作变更</th>
+                            <th class="grp-A">项目编号</th>
+                            <th class="grp-A">项目名称</th>
+                        </tr>
+                    </thead>
+                </table>
+                </div>
+
+                {# 左表数据区（垂直滚动） #}
+                <div class="left-tbody-wrap" id="leftBodyWrap">
+                <table id="leftTable">
+                    <colgroup>
+                        <col style="width:60px">
+                        <col style="width:60px">
+                        <col style="width:60px">
+                    </colgroup>
+                    <tbody id="leftTbody">
+                    {% for r in rows %}
+                        <tr data-id="{{ r[0] }}">
+                            <td class="left-cell">
+                                <a href="{{ url_for('edit', id=r[0], next=request.url) }}">编辑</a>
+                                <span class="delete-btn" data-id="{{ r[0] }}">删除</span>
+                            </td>
+                            <td class="left-cell">{{ r[1] or '' }}</td>
+                            <td class="left-cell">{{ r[2] or '' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td class="left-cell" colspan="3">暂无数据</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+
+            {# ==================== 右侧滚动列 ==================== #}
+            <div class="table-scroll">
+                {# 右表表头（水平滚动，隐藏滚动条） #}
+                <div class="right-thead-wrap">
+                <div class="right-thead" id="rightThead">
+                <table id="rightTableHead">
+                    <colgroup>
+                        <col style="width:120px">
+                        <col style="width:80px">
+                        <col style="width:80px">
+                        <col style="width:60px">
+                        <col style="width:100px">
+                        <col style="width:90px">
+                        <col style="width:100px">
+                        <col style="width:160px">
+                        <col style="width:100px">
+                        <col style="width:100px">
+                        <col style="width:100px">
+                        <col style="width:90px">
+                        <col style="width:100px">
+                        <col style="width:100px">
+                        <col style="width:160px">
+                        <col style="width:100px">
+                        <col style="width:90px">
+                        <col style="width:100px">
+                        <col style="width:100px">
+                        <col style="width:90px">
+                        <col style="width:100px">
+                        <col style="width:80px">
+                        <col style="width:80px">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th class="grp-B">需求分类</th>
+                            <th class="grp-B">工作量</th>
+                            <th class="grp-B">补记</th>
+                            <th class="grp-B">备注</th>
+                            <th class="grp-C">签约状态</th>
+                            <th class="grp-C">签约金额</th>
+                            <th class="grp-C">签约日期</th>
+                            <th class="grp-C">签约跟踪</th>
+                            <th class="grp-D">考勤开始</th>
+                            <th class="grp-D">考勤结束</th>
+                            <th class="grp-D">验收状态</th>
+                            <th class="grp-D">验收金额</th>
+                            <th class="grp-D">验收日期</th>
+                            <th class="grp-D">实际上会</th>
+                            <th class="grp-D">验收跟踪</th>
+                            <th class="grp-E">首付状态</th>
+                            <th class="grp-E">首付金额</th>
+                            <th class="grp-E">首付日期</th>
+                            <th class="grp-E">尾款状态</th>
+                            <th class="grp-E">尾款金额</th>
+                            <th class="grp-E">尾款日期</th>
+                            <th class="grp-E">毛利率</th>
+                            <th class="grp-E">毛利额</th>
+                        </tr>
+                    </thead>
+                </table>
+                </div>
+                </div>
+
+                {# 右表数据区（垂直+水平滚动） #}
+                <div class="right-tbody-wrap" id="rightBodyWrap">
+                <table id="rightTable">
+                    <colgroup>
+                        <col style="width:120px">
+                        <col style="width:80px">
+                        <col style="width:80px">
+                        <col style="width:60px">
+                        <col style="width:100px">
+                        <col style="width:90px">
+                        <col style="width:100px">
+                        <col style="width:160px">
+                        <col style="width:100px">
+                        <col style="width:100px">
+                        <col style="width:100px">
+                        <col style="width:90px">
+                        <col style="width:100px">
+                        <col style="width:100px">
+                        <col style="width:160px">
+                        <col style="width:100px">
+                        <col style="width:90px">
+                        <col style="width:100px">
+                        <col style="width:100px">
+                        <col style="width:90px">
+                        <col style="width:100px">
+                        <col style="width:80px">
+                        <col style="width:80px">
+                    </colgroup>
+                    <tbody>
+                    {% for r in rows %}
+                        <tr data-id="{{ r[0] }}">
+                            <td>{{ r[3] or '' }}</td>
+                            <td>{{ '%.0f'|format(r[4]) if r[4] else '' }}</td>
+                            <td>{{ '%.0f'|format(r[5]) if r[5] else '' }}</td>
+                            <td>{{ r[6] or '' }}</td>
+                            <td>{{ r[7] or '' }}</td>
+                            <td>{{ '%.0f'|format(r[8]) if r[8] else '' }}</td>
+                            <td>{{ r[9] or '' }}</td>
+                            <td>{{ r[10] or '' }}</td>
+                            <td>{{ r[11] or '' }}</td>
+                            <td>{{ r[12] or '' }}</td>
+                            <td>{{ r[13] or '' }}</td>
+                            <td>{{ '%.0f'|format(r[14]) if r[14] else '' }}</td>
+                            <td>{{ r[15] or '' }}</td>
+                            <td>{{ r[16] or '' }}</td>
+                            <td>{{ r[17] or '' }}</td>
+                            <td>{{ r[18] or '' }}</td>
+                            <td>{{ '%.0f'|format(r[19]) if r[19] else '' }}</td>
+                            <td>{{ r[20] or '' }}</td>
+                            <td>{{ r[21] or '' }}</td>
+                            <td>{{ '%.0f'|format(r[22]) if r[22] else '' }}</td>
+                            <td>{{ r[23] or '' }}</td>
+                            <td>{{ '%.2f'|format(r[24]|float * 100) if r[24] else '' }}</td>
+                            <td>{{ '%.0f'|format(r[25]) if r[25] else '' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="23" class="empty">暂无数据</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </div>{# /table-inner #}
+
+        {# 横向滚动条（紧贴table-inner下方，table-wrap内部） #}
+        <div id="hScrollBar" style="display:flex; align-items:center; height:20px; background:#f0f0f0; border-top:1px solid #ddd; flex-shrink:0;">
+            <div id="hScrollThumb" style="height:100%; background:#aaa; border-radius:3px; min-width:60px; cursor:pointer;"></div>
+        </div>
+
+    </div>{# /table-wrap #}
+
+    <div class="pagination">
+        {% if page > 1 %}
+        <a href="?{{ update_param('page', page-1) }}">上一页</a>
+        {% endif %}
+        <span>第 {{ page }} / {{ total_pages }} 页，共 {{ total }} 条</span>
+        {% if page < total_pages %}
+        <a href="?{{ update_param('page', page+1) }}">下一页</a>
+        {% endif %}
+    </div>
+</div>
+
+<div id="deleteModal" class="modal" style="display:none">
+    <div class="modal-content">
+        <h3>删除确认</h3>
+        <p>请输入授权码：</p>
+        <input type="password" id="authCode" placeholder="授权码">
+        <div class="modal-btns">
+            <button onclick="confirmDelete()" class="btn btn-danger">确认删除</button>
+            <button onclick="closeModal()" class="btn btn-ghost">取消</button>
+        </div>
+        <p id="modalError" class="error" style="display:none"></p>
+    </div>
+</div>
+
+<script>
+// ====== 双table垂直滚动同步 ======
+var rightBodyWrap = document.getElementById('rightBodyWrap');
+var leftBodyWrap = document.getElementById('leftBodyWrap');
+
+function getMaxScroll(el) {
+    return el.scrollHeight - el.clientHeight;
+}
+
+var isSyncing = false;
+
+function syncLeftFromRight() {
+    if (isSyncing) return;
+    var maxRight = getMaxScroll(rightBodyWrap);
+    var maxLeft = getMaxScroll(leftBodyWrap);
+    if (maxRight <= 0 || maxLeft <= 0) return;
+    var pct = rightBodyWrap.scrollTop / maxRight;
+    var target = pct * maxLeft;
+    isSyncing = true;
+    leftBodyWrap.scrollTop = target;
+    isSyncing = false;
+}
+
+function syncRightFromLeft() {
+    if (isSyncing) return;
+    var maxRight = getMaxScroll(rightBodyWrap);
+    var maxLeft = getMaxScroll(leftBodyWrap);
+    if (maxRight <= 0 || maxLeft <= 0) return;
+    var pct = leftBodyWrap.scrollTop / maxLeft;
+    var target = pct * maxRight;
+    isSyncing = true;
+    rightBodyWrap.scrollTop = target;
+    isSyncing = false;
+}
+
+if (rightBodyWrap && leftBodyWrap) {
+    rightBodyWrap.addEventListener('scroll', syncLeftFromRight);
+    leftBodyWrap.addEventListener('scroll', syncRightFromLeft);
+
+    // 水平同步：右表body滚 → 表头同步 + 滑块更新
+    rightBodyWrap.addEventListener('scroll', function() {
+        var rightThead = document.getElementById('rightThead');
+        if (rightThead) {
+            rightThead.scrollLeft = rightBodyWrap.scrollLeft;
+        }
+        updateHScrollThumb();
+    });
+}
+
+// ====== 横向滚动条 ======
+function updateHScrollThumb() {
+    var hScrollBar = document.getElementById('hScrollBar');
+    var hScrollThumb = document.getElementById('hScrollThumb');
+    if (!hScrollBar || !hScrollThumb || !rightBodyWrap) return;
+    var total = rightBodyWrap.scrollWidth - rightBodyWrap.clientWidth;
+    if (total <= 0) { hScrollThumb.style.width = '0'; hScrollThumb.style.marginLeft = '0'; return; }
+    var barW = hScrollBar.clientWidth;
+    var thumbW = Math.max(60, (rightBodyWrap.clientWidth / rightBodyWrap.scrollWidth) * barW);
+    var pct = rightBodyWrap.scrollLeft / total;
+    hScrollThumb.style.width = thumbW + 'px';
+    hScrollThumb.style.marginLeft = (pct * (barW - thumbW)) + 'px';
+}
+
+(function() {
+    var dragging = false, startX = 0, startLeft = 0;
+    var hScrollBar = document.getElementById('hScrollBar');
+    var hScrollThumb = document.getElementById('hScrollThumb');
+    if (!hScrollBar || !hScrollThumb) return;
+    hScrollThumb.addEventListener('mousedown', function(e) {
+        dragging = true; startX = e.clientX;
+        startLeft = parseInt(hScrollThumb.style.marginLeft) || 0;
+        e.stopPropagation(); e.preventDefault();
+    });
+    document.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        var barW = hScrollBar.clientWidth;
+        var thumbW = hScrollThumb.offsetWidth;
+        var total = rightBodyWrap.scrollWidth - rightBodyWrap.clientWidth;
+        var newLeft = Math.max(0, Math.min(barW - thumbW, startLeft + (e.clientX - startX)));
+        rightBodyWrap.scrollLeft = (newLeft / (barW - thumbW)) * total;
+    });
+    document.addEventListener('mouseup', function() { dragging = false; });
+    hScrollBar.addEventListener('click', function(e) {
+        if (e.target === hScrollThumb) return;
+        var barW = hScrollBar.clientWidth;
+        var thumbW = hScrollThumb.offsetWidth;
+        var total = rightBodyWrap.scrollWidth - rightBodyWrap.clientWidth;
+        var clickX = e.clientX - hScrollBar.getBoundingClientRect().left;
+        rightBodyWrap.scrollLeft = (clickX / barW) * total;
+    });
+    window.addEventListener('resize', updateHScrollThumb);
+    window.addEventListener('load', updateHScrollThumb);
+    setTimeout(updateHScrollThumb, 200);
+})();
+
+// ====== 删除弹窗 ======
+var deleteId = null;
+document.querySelectorAll('.delete-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        deleteId = this.dataset.id;
+        document.getElementById('deleteModal').style.display = 'flex';
+        document.getElementById('authCode').value = '';
+        document.getElementById('modalError').style.display = 'none';
+        document.getElementById('authCode').focus();
+    });
+});
+function closeModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+    deleteId = null;
+}
+function confirmDelete() {
+    var code = document.getElementById('authCode').value;
+    if (code !== 'hanjian') {
+        document.getElementById('modalError').style.display = 'block';
+        document.getElementById('modalError').textContent = '授权码错误';
+        return;
+    }
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/delete/' + deleteId;
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'auth_code';
+    input.value = code;
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+</body>
+</html>

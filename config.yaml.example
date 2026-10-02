@@ -1,0 +1,9 @@
+# 邮件发送配置样例（请复制为 config.yaml 并填写真实值）
+email:
+  smtp_server: "smtp.example.com"
+  port: 25
+  ssl: false
+  username: "your-account@example.com"
+  password: "your-password"
+  from_addr: "your-account@example.com"
+

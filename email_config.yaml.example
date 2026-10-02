@@ -1,0 +1,14 @@
+# 看板邮件配置样例（请复制为 email_config.yaml 并填写真实值）
+email:
+  enabled: true
+  encryption: tls
+  password: YOUR_PASSWORD
+  recipients:
+  - recipient1@example.com
+  schedule: "0 9 * * 1,5"
+  sender: sender@example.com
+  smtp_host: smtp.example.com
+  smtp_port: 587
+  subject: ""
+  username: username@example.com
+

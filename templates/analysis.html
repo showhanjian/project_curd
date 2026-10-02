@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>经营情况分析</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="tab-bar">
+        <a href="/?tab=kanban" class="tab {% if tab=='kanban' %}active{% endif %}">当前季度KPI</a>
+        <a href="/?tab=analysis" class="tab {% if tab=='analysis' %}active{% endif %}">经营情况分析</a>
+        <a href="/list?tab=list" class="tab {% if tab=='list' %}active{% endif %}">项目信息维护</a>
+    </div>
+    <h1>经营情况分析</h1>
+    <p style="color:#999;padding:40px;text-align:center">功能开发中...</p>
+</div>
+</body>
+</html>

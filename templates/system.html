@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>系统参数维护</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="tab-bar">
+        <a href="/" class="tab {% if tab=='kanban' %}active{% endif %}">当前季度KPI</a>
+        <a href="/sign_kanban" class="tab {% if tab=='sign_kanban' %}active{% endif %}">签约看板</a>
+        <a href="/accept_kanban" class="tab {% if tab=='accept_kanban' %}active{% endif %}">验收看板</a>
+        <a href="/fp_kanban" class="tab {% if tab=='fp_kanban' %}active{% endif %}">首款看板</a>
+        <a href="/lp_kanban" class="tab {% if tab=='lp_kanban' %}active{% endif %}">尾款看板</a>
+        <a href="/list?tab=list" class="tab {% if tab=='list' %}active{% endif %}">项目信息维护</a>
+        <a href="/system" class="tab {% if tab=='system' %}active{% endif %}">系统参数维护</a>
+    </div>
+
+    <h1>系统参数维护</h1>
+
+    <div class="filter-card">
+        <h2>📧 邮件报告配置</h2>
+        <form method="POST" action="/system">
+            <input type="hidden" name="section" value="email">
+
+            <div class="form-row">
+                <label>启用邮件报告</label>
+                <select name="email_enabled">
+                    <option value="true" {% if email_cfg.enabled %}selected{% endif %}>启用</option>
+                    <option value="false" {% if not email_cfg.enabled %}selected{% endif %}>禁用</option>
+                </select>
+            </div>
+
+            <div class="form-row" style="display:none">
+                <label>发件人</label>
+                <input type="email" name="sender" value="{{ email_cfg.sender or '' }}">
+            </div>
+
+            <div class="form-row">
+                <label>收件人</label>
+                <textarea name="recipients" rows="3" placeholder="每行一个收件人邮箱">{{ '\n'.join(email_cfg.recipients or []) }}</textarea>
+            </div>
+
+            <div class="form-row">
+                <label>Cron 表达式</label>
+                <input type="text" name="schedule" value="{{ email_cfg.schedule or '2 4 * * *' }}">
+                <span class="hint">每周一至五 9:00</span>
+            </div>
+
+            <!-- 以下字段隐藏但保持提交 -->
+            <input type="hidden" name="smtp_host" value="{{ email_cfg.smtp_host or '' }}">
+            <input type="hidden" name="smtp_port" value="{{ email_cfg.smtp_port or 465 }}">
+            <input type="hidden" name="encryption" value="{{ email_cfg.encryption or 'ssl' }}">
+            <input type="hidden" name="username" value="{{ email_cfg.username or '' }}">
+            <input type="hidden" name="password" value="{{ email_cfg.password or '' }}">
+            <!-- 收件人改为可见textarea，已在上面显示 -->
+            <input type="hidden" name="subject" value="{{ email_cfg.subject or '' }}">
+
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">保存配置</button>
+            </div>
+        </form>
+    </div>
+
+    <style>
+    .filter-card { background: #fafafa; border: 1px solid #e6e6e6; border-radius: 4px; padding: 20px; margin-bottom: 20px; }
+    .filter-card h2 { margin-top: 0; font-size: 20px; border-bottom: 1px solid #e6e6e6; padding-bottom: 8px; }
+    .form-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .form-row label { width: 130px; text-align: right; flex-shrink: 0; font-weight: 500; }
+    .form-row input[type="text"],
+    .form-row input[type="email"],
+    .form-row input[type="password"],
+    .form-row input[type="number"],
+    .form-row select,
+    .form-row textarea { flex: 1; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 4px; max-width: 400px; }
+    .form-row textarea { resize: vertical; }
+    .hint { font-size: 12px; color: #888; }
+    .actions { margin-top: 16px; padding-top: 16px; border-top: 1px solid #e6e6e6; }
+    </style>
+</div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>项目详情</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h1>项目详情</h1>
+
+    <table class="detail-table">
+        <tr><th>ID</th><td>{{ row.ID }}</td></tr>
+        <tr><th>项目编号</th><td>{{ row.project_no or '' }}</td></tr>
+        <tr><th>项目名称</th><td>{{ row.project_name or '' }}</td></tr>
+        <tr><th>需求类型</th><td>{{ row.demand_type or '' }}</td></tr>
+        <tr><th>签约状态</th><td>{{ row.sign_status or '' }}</td></tr>
+        <tr><th>人月数</th><td>{{ '%.2f'|format(row.person_months) if row.person_months else '' }}</td></tr>
+        <tr><th>补人月</th><td>{{ '%.2f'|format(row.person_months_added) if row.person_months_added else '' }}</td></tr>
+        <tr><th>签约金额</th><td>{{ '%.2f'|format(row.sign_amt) if row.sign_amt else '' }}</td></tr>
+        <tr><th>签约日期</th><td>{{ row.sign_date or '' }}</td></tr>
+        <tr><th>签约跟踪</th><td>{{ row.sign_remark or '' }}</td></tr>
+        <tr><th>利润率</th><td>{{ row.profit_rate or '' }}</td></tr>
+        <tr><th>利润额</th><td>{{ '%.2f'|format(row.profit_amt) if row.profit_amt else '' }}</td></tr>
+        <tr><th>验收状态</th><td>{{ row.accept_status or '' }}</td></tr>
+        <tr><th>验收日期</th><td>{{ row.accept_date or '' }}</td></tr>
+        <tr><th>验收跟踪</th><td>{{ row.accept_remark or '' }}</td></tr>
+        <tr><th>考勤开始</th><td>{{ row.attend_start or '' }}</td></tr>
+        <tr><th>考勤结束</th><td>{{ row.attend_end or '' }}</td></tr>
+        <tr><th>首款状态</th><td>{{ row.pay1_status or '' }}</td></tr>
+        <tr><th>首款金额</th><td>{{ '%.2f'|format(row.pay1_amt) if row.pay1_amt else '' }}</td></tr>
+        <tr><th>首款日期</th><td>{{ row.pay1_date or '' }}</td></tr>
+        <tr><th>尾款状态</th><td>{{ row.pay2_status or '' }}</td></tr>
+        <tr><th>尾款金额</th><td>{{ '%.2f'|format(row.pay2_amt) if row.pay2_amt else '' }}</td></tr>
+        <tr><th>尾款日期</th><td>{{ row.pay2_date or '' }}</td></tr>
+    </table>
+
+    <div class="actions">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">返回列表</a>
+        <a href="{{ url_for('edit', id=row.ID) }}" class="btn btn-primary">编辑</a>
+    </div>
+</div>
+</body>
+</html>

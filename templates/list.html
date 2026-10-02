@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目信息维护</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='list.css') }}">
+</head>
+<body>
+{% macro sort_link(field, label) %}
+{%- set params = [] -%}
+{%- for k, v in request.args.items() -%}
+{%- if k == 'sort' -%}
+{%- do params.append('sort=' ~ field) -%}
+{%- elif k == 'dir' -%}
+{%- do params.append('dir=asc' if v == 'desc' else 'dir=desc') -%}
+{%- else -%}
+{%- do params.append(k ~ '=' ~ v) -%}
+{%- endif -%}
+{%- endfor -%}
+{%- if 'sort' not in request.args -%}
+{%- do params.append('sort=' ~ field) -%}
+{%- do params.append('dir=asc') -%}
+{%- endif -%}
+<a href="/list?{{ params|join('&') }}">{{ label }} {% if sort_field == field %}{{ '▲' if sort_dir == 'asc' else '▼' }}{% endif %}</a>
+{% endmacro %}
+<div class="container">
+
+    <div class="tab-bar">
+        <a href="/" class="tab {% if tab=='kanban' %}active{% endif %}">当前季度KPI</a>
+        <a href="/sign_kanban" class="tab {% if tab=='sign_kanban' %}active{% endif %}">签约看板</a>
+        <a href="/accept_kanban" class="tab {% if tab=='accept_kanban' %}active{% endif %}">验收看板</a>
+        <a href="/fp_kanban" class="tab {% if tab=='fp_kanban' %}active{% endif %}">首款看板</a>
+        <a href="/lp_kanban" class="tab {% if tab=='lp_kanban' %}active{% endif %}">尾款看板</a>
+        <a href="/list?tab=list" class="tab {% if tab=='list' %}active{% endif %}">项目信息维护</a>
+        <a href="/system" class="tab {% if tab=='system' %}active{% endif %}">系统参数维护</a>
+    </div>
+
+    <form method="get" class="search-form">
+        <div class="search-row">
+            <a href="{{ url_for('new', next=request.url) }}" class="btn btn-primary">+ 新增项目</a>
+            <span class="row-label" style="margin-left:16px">模糊查询</span>
+            <input type="text" name="search" placeholder="项目编号/名称" value="{{ search }}">
+            <button type="submit" class="btn btn-secondary">搜索</button>
+            <a href="{{ url_for('list_view') }}" class="btn btn-ghost">重置</a>
+            <span class="row-label" style="margin-left:16px">快捷查询</span>
+            <a href="/list" class="btn btn-secondary {% if not q %}active{% endif %}">全部</a>
+            <select id="signSelect" onchange="location.href='/list?q='+this.value" class="btn btn-secondary">
+                <option value="sign_q" {% if q=='sign_q' %}selected{% endif %}>本季签约</option>
+                <option value="sign_y" {% if q=='sign_y' %}selected{% endif %}>本年签约</option>
+            </select>
+            <select id="acceptSelect" onchange="location.href='/list?q='+this.value" class="btn btn-secondary">
+                <option value="accept_q" {% if q=='accept_q' %}selected{% endif %}>本季验收</option>
+                <option value="accept_y" {% if q=='accept_y' %}selected{% endif %}>本年验收</option>
+            </select>
+            <select id="pay1Select" onchange="location.href='/list?q='+this.value" class="btn btn-secondary">
+                <option value="pay1_q" {% if q=='pay1_q' %}selected{% endif %}>本季首付</option>
+                <option value="pay1_y" {% if q=='pay1_y' %}selected{% endif %}>本年首付</option>
+            </select>
+            <select id="pay2Select" onchange="location.href='/list?q='+this.value" class="btn btn-secondary">
+                <option value="pay2_q" {% if q=='pay2_q' %}selected{% endif %}>本季尾款</option>
+                <option value="pay2_y" {% if q=='pay2_y' %}selected{% endif %}>本年尾款</option>
+            </select>
+            <a href="/api/export" class="btn btn-secondary" style="margin-left:8px">导出Excel</a>
+        </div>
+    </form>
+
+    {# ================================================ #}
+    {#  布局：table-wrap(column)                      #}
+    {#    ├─ table-inner(row): 左表(180px) + 右表(flex:1)  #}
+    {#    └─ hScrollBar(20px, 贴底)                      #}
+    {# ================================================ #}
+    <div id="tableWrap">
+
+        <div id="tableInner">
+
+            {# -------- 左表(固定180px) -------- #}
+            <div id="leftTableWrap">
+                    <table id="leftTableHead">
+                    <colgroup>
+                        <col style="width:30px">
+                        <col style="width:52px">
+                        <col style="width:110px">
+                        <col style="width:190px">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAllProjects"></th>
+                            <th id="headerFilterBtn" style="cursor:pointer;white-space:nowrap;">筛选</th>
+                            <th>
+                                {{ sort_link('project_no', '项目编号') }}
+                            </th>
+                            <th>项目名称</th>
+                        </tr>
+                    </thead>
+                </table>
+                <div id="leftBodyWrap">
+                    <table id="leftTable">
+                        <colgroup>
+                            <col style="width:30px">
+                            <col style="width:52px">
+                            <col style="width:110px">
+                            <col style="width:190px">
+                        </colgroup>
+                        <tbody id="leftTbody">
+                        {% for r in rows %}
+                            <tr data-id="{{ r[0] }}">
+                                <td class="left-cell">
+                                    <input type="checkbox" class="project-cb" value="{{ r[2] }}">
+                                </td>
+                                <td class="left-cell">
+                                    <a href="{{ url_for('edit', id=r[0], next=request.url) }}">编辑</a>
+                                </td>
+                                <td class="left-cell">{{ r[1] or '' }}</td>
+                                <td class="left-cell">{{ r[2] or '' }}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td class="left-cell" colspan="4">暂无数据</td></tr>
+                        {% endfor %}
+                        <tr class="summary-row">
+                            <td class="left-cell" colspan="4">合计</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {# -------- 右表(flex:1) -------- #}
+            <div id="rightTableWrap">
+                <div id="rightTheadWrap">
+                    <div id="rightThead">
+                        <table id="rightTableHead">
+                            <colgroup>
+                                <col style="width:100px">
+                                <col style="width:52px">
+                                <col style="width:48px">
+                                <col style="width:60px">
+                                <col style="width:70px">
+                                <col style="width:81px">
+                                <col style="width:90px">
+                                <col style="width:208px">
+                                <col style="width:80px">
+                                <col style="width:80px">
+                                <col style="width:70px">
+                                <col style="width:81px">
+                                <col style="width:80px">
+                                <col style="width:90px">
+                                <col style="width:200px">
+                                <col style="width:70px">
+                                <col style="width:72px">
+                                <col style="width:80px">
+                                <col style="width:81px">
+                                <col style="width:73px">
+                                <col style="width:80px">
+                                <col style="width:65px">
+                                <col style="width:72px">
+                                <col style="width:115px">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>需求分类</th>
+                                    <th>工作量</th>
+                                    <th>补记</th>
+                                    <th>备注</th>
+                                    <th>签约状态</th>
+                                    <th>签约金额</th>
+                                    <th>
+                                {{ sort_link('sign_date', '签约日期') }}
+                            </th>
+                                    <th>签约跟踪</th>
+                                    <th>考勤开始</th>
+                                    <th>考勤结束</th>
+                                    <th>验收状态</th>
+                                    <th>验收金额</th>
+                                    <th>{{ sort_link('accept_date', '验收日期') }}</th>
+                                    <th>实际上会</th>
+                                    <th>验收跟踪</th>
+                                    <th>首付状态</th>
+                                    <th>首付金额</th>
+                                    <th>首付日期</th>
+                                    <th>尾款状态</th>
+                                    <th>尾款金额</th>
+                                    <th>尾款日期</th>
+                                    <th>毛利率</th>
+                                    <th>毛利额</th>
+                                    <th class="gray-bg">负责人</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div id="rightBodyWrap">
+                    <table id="rightTable">
+                        <colgroup>
+                            <col style="width:100px">
+                            <col style="width:52px">
+                            <col style="width:48px">
+                            <col style="width:60px">
+                            <col style="width:70px">
+                            <col style="width:81px">
+                            <col style="width:90px">
+                            <col style="width:208px">
+                            <col style="width:80px">
+                            <col style="width:80px">
+                            <col style="width:70px">
+                            <col style="width:81px">
+                            <col style="width:80px">
+                            <col style="width:90px">
+                            <col style="width:200px">
+                            <col style="width:70px">
+                            <col style="width:72px">
+                            <col style="width:80px">
+                            <col style="width:81px">
+                            <col style="width:73px">
+                            <col style="width:80px">
+                            <col style="width:65px">
+                            <col style="width:72px">
+                            <col style="width:115px">
+                        </colgroup>
+                        <tbody>
+                        {% for r in rows %}
+                            <tr data-id="{{ r[0] }}">
+                                <td>{{ r[3] or '' }}</td>
+                                <td>{{ '%.1f'|format(r[4]) if r[4] else '' }}</td>
+                                <td>{{ '%.1f'|format(r[5]) if r[5] else '' }}</td>
+                                <td>{{ r[6] or '' }}</td>
+                                <td>{{ r[7] or '' }}</td>
+                                <td>{{ '%.0f'|format(r[8]) if r[8] else '' }}</td>
+                                <td>{{ r[9] or '' }}</td>
+                                <td>{{ r[10] or '' }}</td>
+                                <td>{{ r[11] or '' }}</td>
+                                <td>{{ r[12] or '' }}</td>
+                                <td>{{ r[13] or '' }}</td>
+                                <td>{{ '%.0f'|format(r[14]) if r[14] else '' }}</td>
+                                <td>{{ r[15] or '' }}</td>
+                                <td>{{ r[16] or '' }}</td>
+                                <td>{{ r[17] or '' }}</td>
+                                <td>{{ r[18] or '' }}</td>
+                                <td>{{ '%.0f'|format(r[19]) if r[19] else '' }}</td>
+                                <td>{{ r[20] or '' }}</td>
+                                <td>{{ r[21] or '' }}</td>
+                                <td>{{ '%.0f'|format(r[22]) if r[22] else '' }}</td>
+                                <td>{{ r[23] or '' }}</td>
+                                <td>{{ '%.2f'|format(r[24]) if r[24] else '' }}</td>
+                                <td>{{ '%.0f'|format(r[25]) if r[25] else '' }}</td>
+                                <td>{{ r[26] or '' }}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="24" class="empty">暂无数据</td></tr>
+                        {% endfor %}
+                        <tr class="summary-row">
+                            <td colspan="5"></td>
+                            <td>{{ '%.0f'|format(total_sign_amt) }}</td>
+                            <td colspan="5"></td>
+                            <td>{{ '%.0f'|format(total_accept_amt) }}</td>
+                            <td colspan="4"></td>
+                            <td>{{ '%.0f'|format(total_first_pay_amt) }}</td>
+                            <td colspan="2"></td>
+                            <td>{{ '%.0f'|format(total_final_pay_amt) }}</td>
+                            <td colspan="3"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>{# /tableInner #}
+
+    </div>{# /tableWrap #}
+
+</div>{# /container #}
+
+<script>
+(function() {
+    var rightBody = document.getElementById('rightBodyWrap');
+    var rightHead = document.getElementById('rightThead');
+    var leftBody = document.getElementById('leftBodyWrap');
+
+    // ---------- 水平同步（表头跟随） ----------
+    rightBody.addEventListener('scroll', function() {
+        if (rightHead) {
+            rightHead.scrollLeft = Math.round(rightBody.scrollLeft);
+        }
+    });
+
+    // ---------- 垂直同步（左表 ↔ 右表） ----------
+    var isSyncing = false;
+    function syncVertical(source, target) {
+        if (isSyncing) return;
+        isSyncing = true;
+        target.scrollTop = source.scrollTop;
+        isSyncing = false;
+    }
+    if (rightBody && leftBody) {
+        rightBody.addEventListener('scroll', function() { syncVertical(rightBody, leftBody); });
+        leftBody.addEventListener('scroll', function() { syncVertical(leftBody, rightBody); });
+    }
+
+    // ---------- 项目名称复选框筛选 ----------
+    var selectAll = document.getElementById('selectAllProjects');
+    var projectCbs = document.querySelectorAll('.project-cb');
+    var confirmBtn = document.getElementById('headerFilterBtn');
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            projectCbs.forEach(function(cb) { cb.checked = selectAll.checked; });
+        });
+    }
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function() {
+            var checked = document.querySelectorAll('.project-cb:checked');
+            var names = [];
+            checked.forEach(function(cb) { names.push(cb.value); });
+            var url = new URL(window.location.href);
+            url.searchParams.delete('project_names');
+            url.searchParams.delete('page');
+            if (names.length > 0) {
+                url.searchParams.set('project_names', names.join(','));
+            }
+            window.location.href = url.toString();
+        });
+    }
+})();
+</script>
+</body>
+</html>

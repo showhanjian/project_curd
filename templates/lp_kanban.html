@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>尾款看板</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="tab-bar">
+        <a href="/" class="tab {% if tab=='kanban' %}active{% endif %}">当前季度KPI</a>
+        <a href="/sign_kanban" class="tab {% if tab=='sign_kanban' %}active{% endif %}">签约看板</a>
+        <a href="/accept_kanban" class="tab {% if tab=='accept_kanban' %}active{% endif %}">验收看板</a>
+        <a href="/fp_kanban" class="tab {% if tab=='fp_kanban' %}active{% endif %}">首款看板</a>
+        <a href="/lp_kanban" class="tab {% if tab=='lp_kanban' %}active{% endif %}">尾款看板</a>
+        <a href="/list?tab=list" class="tab {% if tab=='list' %}active{% endif %}">项目信息维护</a>
+        <a href="/system" class="tab {% if tab=='system' %}active{% endif %}">系统参数维护</a>
+    </div>
+
+    <div class="kanban-grid">
+        <div class="kanban-card">
+            <h2>💰 尾款收款</h2>
+            <div class="kanban-section">
+                <h3>本季计划及完成情况</h3>
+                <table class="mini-table">
+                    <colgroup>
+                        <col style="width:121px">
+                        <col style="width:138px">
+                        <col style="width:200px">
+                        <col style="width:115px">
+                        <col style="width:228px">
+                        <col style="width:104px">
+                        <col style="width:78px">
+                    </colgroup>
+                    <tr><th>计划日期</th><th>项目编号</th><th>项目名称</th><th>计划金额</th><th>负责人</th><th>完成情况</th><th>操作</th></tr>
+                    {% for r in lp_month %}
+                    <tr class="{{ 'status-plan' if r[4] == '计划' else 'status-done' }}">
+                        <td>{{ r[6] or '-' }}</td>
+                        <td>{{ r[1] or '-' }}</td>
+                        <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r[2] or '(无名称)' }}</td>
+                        <td>{{ '%.2f'|format(r[3]) if r[3] else '-' }}</td>
+                        <td>{{ r[5] or '-' }}</td>
+                        <td>{{ r[4] or '-' }}</td>
+                        <td><a href="{{ url_for('edit', id=r[0], next=request.url) }}">更新</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="empty-cell">暂无数据</td></tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td></td><td></td><td>合计</td>
+                        <td>{{ '%.2f'|format(lp_month_totals[0]) if lp_month_totals[0] else '-' }}</td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="kanban-section">
+                <h3>本年计划及完成情况</h3>
+                <table class="mini-table">
+                    <colgroup>
+                        <col style="width:121px">
+                        <col style="width:138px">
+                        <col style="width:200px">
+                        <col style="width:115px">
+                        <col style="width:228px">
+                        <col style="width:104px">
+                        <col style="width:78px">
+                    </colgroup>
+                    <tr><th>计划日期</th><th>项目编号</th><th>项目名称</th><th>计划金额</th><th>负责人</th><th>完成情况</th><th>操作</th></tr>
+                    {% for r in lp_quarter %}
+                    <tr class="{{ 'status-plan' if r[4] == '计划' else 'status-done' }}">
+                        <td>{{ r[6] or '-' }}</td>
+                        <td>{{ r[1] or '-' }}</td>
+                        <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r[2] or '(无名称)' }}</td>
+                        <td>{{ '%.2f'|format(r[3]) if r[3] else '-' }}</td>
+                        <td>{{ r[5] or '-' }}</td>
+                        <td>{{ r[4] or '-' }}</td>
+                        <td><a href="{{ url_for('edit', id=r[0], next=request.url) }}">更新</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="empty-cell">暂无数据</td></tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td></td><td></td><td>合计</td>
+                        <td>{{ '%.2f'|format(lp_quarter_totals[0]) if lp_quarter_totals[0] else '-' }}</td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs and runtime artifacts
+app.log
+nohup.out
+logs/
+*.pid
+.app.pid
+
+# Backups
+*.bak
+
+# Local config with secrets — keep templates, ignore real ones
+config.yaml
+email_config.yaml
+
+# OS noise
+.DS_Store
+Thumbs.db
+

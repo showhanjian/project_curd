@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>{{ '编辑' if row else '新增' }}项目</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+<h1>{{ '编辑' if row else '新增' }}项目</h1>
+    <form method="post" class="edit-form">
+        <input type="hidden" name="next" value="{{ next_url or '' }}">
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var workloadInput = document.querySelector('[name=workload]');
+            var signAmtInput = document.querySelector('[name=sign_amt]');
+            if (workloadInput && signAmtInput) {
+                workloadInput.addEventListener('input', function() {
+                    var w = parseFloat(workloadInput.value);
+                    signAmtInput.value = (isNaN(w) || w === 0) ? '' : Math.round(w * 23550);
+                });
+            }
+            var signDateInput = document.querySelector('[name=sign_date]');
+            var firstPayDateInput = document.querySelector('[name=first_pay_date]');
+            if (signDateInput && firstPayDateInput) {
+                signDateInput.addEventListener('change', function() {
+                    if (!signDateInput.value) { firstPayDateInput.value = ''; return; }
+                    var d = new Date(signDateInput.value);
+                    d.setMonth(d.getMonth() + 1);
+                    firstPayDateInput.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                });
+            }
+            var actualHandoverInput = document.querySelector('[name=actual_handover]');
+            var finalPayDateInput = document.querySelector('[name=final_pay_date]');
+            if (actualHandoverInput && finalPayDateInput) {
+                actualHandoverInput.addEventListener('change', function() {
+                    if (!actualHandoverInput.value) { finalPayDateInput.value = ''; return; }
+                    var d = new Date(actualHandoverInput.value);
+                    d.setMonth(d.getMonth() + 4);
+                    finalPayDateInput.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                });
+            }
+            var finalPayStatusInput = document.querySelector('[name=final_pay_status]');
+            var signAmt4 = document.querySelector('[name=sign_amt]');
+            var finalPayAmtInput = document.querySelector('[name=final_pay_amt]');
+            function calcFinal() {
+                if (!signAmt4 || !finalPayAmtInput) return;
+                if (finalPayStatusInput && finalPayStatusInput.value === '计划') {
+                    var s = parseFloat(signAmt4.value);
+                    finalPayAmtInput.value = (isNaN(s) || s === 0) ? '' : (s * 0.70).toFixed(2);
+                }
+            }
+            if (finalPayStatusInput && signAmt4 && finalPayAmtInput) {
+                finalPayStatusInput.addEventListener('change', calcFinal);
+                signAmt4.addEventListener('input', calcFinal);
+            }
+            var firstPayStatusInput = document.querySelector('[name=first_pay_status]');
+            var signAmt3 = document.querySelector('[name=sign_amt]');
+            var firstPayAmtInput = document.querySelector('[name=first_pay_amt]');
+            function calcFirst() {
+                if (!signAmt3 || !firstPayAmtInput) return;
+                if (firstPayStatusInput && firstPayStatusInput.value === '计划') {
+                    var s = parseFloat(signAmt3.value);
+                    firstPayAmtInput.value = (isNaN(s) || s === 0) ? '' : (s * 0.30).toFixed(2);
+                }
+            }
+            if (firstPayStatusInput && signAmt3 && firstPayAmtInput) {
+                firstPayStatusInput.addEventListener('change', calcFirst);
+                signAmt3.addEventListener('input', calcFirst);
+            }
+            var acceptStatusInput = document.querySelector('[name=accept_status]');
+            var signAmt2 = document.querySelector('[name=sign_amt]');
+            var acceptAmtInput = document.querySelector('[name=accept_amt]');
+            function calcAccept() {
+                if (!signAmt2 || !acceptAmtInput) return;
+                if (acceptStatusInput && acceptStatusInput.value === '计划') {
+                    var s = parseFloat(signAmt2.value);
+                    acceptAmtInput.value = (isNaN(s) || s === 0) ? '' : (s / 1.06).toFixed(2);
+                }
+            }
+            if (acceptStatusInput && signAmt2 && acceptAmtInput) {
+                acceptStatusInput.addEventListener('change', calcAccept);
+                signAmt2.addEventListener('input', calcAccept);
+            }
+        });
+        </script>
+
+        <fieldset>
+            <legend>立项信息</legend>
+            <div class="fields-container">
+                <div class="field-row">
+                    <label>项目编号</label>
+                    <input type="text" name="project_no" value="{{ row.project_no or '' }}">
+                </div>
+                <div class="field-row">
+                    <label>项目名称</label>
+                    <input type="text" name="project_name" value="{{ row.project_name or '' }}">
+                </div>
+                <div class="field-row">
+                    <label>需求分类</label>
+                    <select name="demand_type">
+                        <option value="">-- 请选择 --</option>
+                        {% set demand_options = ['业务需求-国结','业务需求-网金','业务需求-机构','业务需求-房金','业务需求-结算','业务需求-公司','业务需求-商户','业务需求-个金','业务需求-普惠','业务需求-信用卡','业务需求-安保','业务需求-乡金','总行推分-科技','坦云服务-科技','技术服务-科技'] %}
+                        {% for opt in demand_options %}
+                        <option value="{{ opt }}" {{ 'selected' if row and row.demand_type == opt }}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field-row">
+                    <label>&nbsp;&nbsp;&nbsp;&nbsp;工作量</label>
+                    <input type="number" step="0.01" name="workload" value="{{ row.workload or '' }}">
+                    <span class="hint">自动计算签约</span>
+                </div>
+                <div class="field-row">
+                    <label>补记人月</label>
+                    <input type="number" step="0.01" name="extra_work" value="{{ row.extra_work or '' }}">
+                </div>
+                <div class="field-row">
+                    <label>补记备注</label>
+                    <input type="text" name="remark" value="{{ row.remark or '' }}">
+                </div>
+                <div class="field-row">
+                    <label>&nbsp;&nbsp;&nbsp;&nbsp;负责人</label>
+                    <input type="text" name="owner" value="{{ row.owner or '' }}">
+                </div>
+                <div class="field-row">
+                    <label>&nbsp;&nbsp;&nbsp;&nbsp;毛利率</label>
+                    <input type="number" step="0.0001" name="profit_rate" value="{{ row.profit_rate if (row and row.profit_rate is not none) else '0.28' }}">
+                    <span class="hint">默认</span>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>签约信息</legend>
+            <div class="fields-container">
+                <div class="field-row">
+                    <label>签约状态</label>
+                    <select name="sign_status">
+                        <option value="">-- 请选择 --</option>
+                        <option value="计划" {{ 'selected' if row and row.sign_status == '计划' }}>计划</option>
+                        <option value="完成" {{ 'selected' if row and row.sign_status == '完成' }}>完成</option>
+                    </select>
+                </div>
+                <div class="field-row">
+                    <label>签约金额</label>
+                    <input type="number" step="0.01" name="sign_amt" value="{{ row.sign_amt or '' }}">
+                    <span class="hint">自动计算</span>
+                </div>
+                <div class="field-row">
+                    <label>签约日期</label>
+                    <input type="date" name="sign_date" value="{{ row.sign_date or '' }}">
+                </div>
+            </div>
+            <div class="field-row full">
+                <label>签约跟踪</label>
+                <textarea name="sign_followup" rows="1" style="resize:none;overflow:hidden;height:auto;padding-top:6px;padding-bottom:6px;line-height:1.2;width:1200px;box-sizing:border-box;">{{ row.sign_followup or '' }}</textarea>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>验收信息</legend>
+            <div class="fields-container">
+                <div class="field-row">
+                    <label>验收状态</label>
+                    <select name="accept_status">
+                        <option value="">-- 请选择 --</option>
+                        <option value="计划" {{ 'selected' if row and row.accept_status == '计划' }}>计划</option>
+                        <option value="完成" {{ 'selected' if row and row.accept_status == '完成' }}>完成</option>
+                    </select>
+                </div>
+                <div class="field-row">
+                    <label>验收金额</label>
+                    <input type="number" step="0.01" name="accept_amt" value="{{ row.accept_amt or '' }}">
+                    <span class="hint">自动计算</span>
+                </div>
+                <div class="field-row">
+                    <label>验收日期</label>
+                    <input type="date" name="accept_date" value="{{ row.accept_date or '' }}">
+                </div>
+                <div class="field-row">
+                    <label>上会日期</label>
+                    <input type="date" name="actual_handover" value="{{ row.actual_handover or '' }}">
+                </div>
+                <div class="field-row">
+                    <label>考勤开始</label>
+                    <input type="date" name="attend_start" value="{{ row.attend_start or '' }}">
+                </div>
+                <div class="field-row">
+                    <label>考勤结束</label>
+                    <input type="date" name="attend_end" value="{{ row.attend_end or '' }}">
+                </div>
+            </div>
+            <div class="field-row full">
+                <label>验收跟踪</label>
+                <textarea name="accept_followup" rows="1" style="resize:none;overflow:hidden;height:auto;padding-top:6px;padding-bottom:6px;line-height:1.2;width:1200px;box-sizing:border-box;">{{ row.accept_followup or '' }}</textarea>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>收款信息</legend>
+            <div class="fields-container">
+                <div class="field-row">
+                    <label>首款状态</label>
+                    <select name="first_pay_status">
+                        <option value="">-- 请选择 --</option>
+                        <option value="计划" {{ 'selected' if row and row.first_pay_status == '计划' }}>计划</option>
+                        <option value="完成" {{ 'selected' if row and row.first_pay_status == '完成' }}>完成</option>
+                    </select>
+                </div>
+                <div class="field-row">
+                    <label>首款金额</label>
+                    <input type="number" step="0.01" name="first_pay_amt" value="{{ row.first_pay_amt or '' }}">
+                    <span class="hint">自动计算</span>
+                </div>
+                <div class="field-row">
+                    <label>首款日期</label>
+                    <input type="date" name="first_pay_date" value="{{ row.first_pay_date or '' }}">
+                    <span class="hint">自动计算</span>
+                </div>
+                <div class="field-row">
+                    <label>尾款状态</label>
+                    <select name="final_pay_status">
+                        <option value="">-- 请选择 --</option>
+                        <option value="计划" {{ 'selected' if row and row.final_pay_status == '计划' }}>计划</option>
+                        <option value="完成" {{ 'selected' if row and row.final_pay_status == '完成' }}>完成</option>
+                    </select>
+                </div>
+                <div class="field-row">
+                    <label>尾款金额</label>
+                    <input type="number" step="0.01" name="final_pay_amt" value="{{ row.final_pay_amt or '' }}">
+                    <span class="hint">自动计算</span>
+                </div>
+                <div class="field-row">
+                    <label>尾款日期</label>
+                    <input type="date" name="final_pay_date" value="{{ row.final_pay_date or '' }}">
+                    <span class="hint">自动计算</span>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="actions">
+            <button type="submit" class="btn btn-primary">保存</button>
+            <a href="{{ unquote_plus(next_url) if next_url else url_for('index') }}" class="btn btn-secondary">取消</a>
+            {% if row %}
+            <button type="button" class="btn btn-danger" onclick="doDelete()">删除</button>
+            {% endif %}
+        </div>
+    </form>
+    {% if row %}
+    <form id="deleteForm" method="post" action="{{ url_for('delete', id=row['id']) }}" style="display:none">
+        <input type="hidden" name="auth_code" id="deleteAuthCode">
+        <input type="hidden" name="next" value="{{ next_url or '' }}">
+    </form>
+    <script>
+    function doDelete() {
+        var code = prompt('请输入授权码：');
+        if (!code) return;
+        document.getElementById('deleteAuthCode').value = code;
+        document.getElementById('deleteForm').submit();
+    }
+    </script>
+    {% endif %}
+</div>
+</body>
+</html>
