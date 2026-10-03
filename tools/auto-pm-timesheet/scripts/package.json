@@ -1,0 +1,7 @@
+{
+  "name": "auto-pm-timesheet",
+  "version": "0.1.0",
+  "description": "Git PM timesheet automation entry",
+  "main": "run.js",
+  "type": "commonjs"
+}
